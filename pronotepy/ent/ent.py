@@ -55,7 +55,7 @@ ecollege_haute_garonne_edu = partial(
 
 ac_orleans_tours = partial(
     _cas_edu,
-    url="https://ent.netocentre.fr/cas/login?token=ce8ae867a0accc0b7577fcc340bb99f4&idpId=parentEleveEN-IdP",
+    url="https://auth.recia.fr/cas/login?service=https://lycees.netocentre.fr/portail/Login&token=c2fef9c3ad09196fc6cbd359e1570ed8&idpId=parentEleveEN-IdP",
     redirect_form=False,
 )
 

@@ -23,6 +23,7 @@ def _sso_redirect(
     request_payload: dict = {},
 ) -> typing.Optional[requests.Response]:
     soup = BeautifulSoup(response.text, "html.parser")
+    print(soup.prettify())
 
     saml = soup.find("input", {"name": saml_type})
     if not saml and response.status_code == 200 and request_url != response.url:
@@ -54,6 +55,7 @@ def _educonnect(
     username: str,
     password: str,
     url: str,
+    response: str = None,
     exceptions: bool = True,
     **opts: str,
 ) -> typing.Optional[requests.Response]:
@@ -76,10 +78,19 @@ def _educonnect(
     """
     if not url:
         raise ENTLoginError("Missing url attribute")
+    
+    if not response :
+        raise ENTLoginError("Your ent is not implemented yet (not compatible with educonnect changes)")
+        
+    
+    soup = BeautifulSoup(response.text,"html.parser")
+    print(soup.prettify())
+    csrf_token = soup.find("input", {"name": "csrf_token"})["value"]
+    print(csrf_token)
 
     log.debug(f"[EduConnect {url}] Logging in with {username}")
 
-    payload = {"j_username": username, "j_password": password, "_eventId_proceed": ""}
+    payload = {"csrf_token":csrf_token, "j_username": username, "j_password": password, "_eventId_proceed": ""}
     response = session.post(url, headers=HEADERS, data=payload)
     response = _sso_redirect(session, response, "SAMLResponse", url, payload)
     if not response:
@@ -127,15 +138,20 @@ def _cas_edu(
     # ENT Connection
     with requests.Session() as session:
         response = session.get(url, headers=HEADERS)
+        print_cookie(session)
 
         if redirect_form:
             response = _sso_redirect(session, response, "SAMLRequest", url)
         if not response:
             raise ENTLoginError("Connection failure")
 
-        _educonnect(session, username, password, response.url)
+        _educonnect(session, username, password, response.url,response)
 
         return session.cookies
+    
+def print_cookie(session) :
+    for cookie in session.cookies :
+        print(cookie.name,cookie.value)
 
 
 @typing.no_type_check
